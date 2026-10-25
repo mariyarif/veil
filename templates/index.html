@@ -1,0 +1,344 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Veil · Check your photo before you post</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --ink: #0f172a;
+      --muted: #64748b;
+      --line: #e2e8f0;
+      --surface: #ffffff;
+      --bg: #f1f5f9;
+      --brand: #4f46e5;
+      --brand-2: #0ea5e9;
+      --danger: #dc2626;
+      --warn: #f59e0b;
+      --safe: #059669;
+      --radius: 18px;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: "Inter", system-ui, -apple-system, sans-serif;
+      color: var(--ink);
+      background:
+        radial-gradient(1200px 500px at 10% -10%, #c7d2fe 0%, transparent 60%),
+        radial-gradient(900px 500px at 110% 0%, #bae6fd 0%, transparent 60%),
+        var(--bg);
+      min-height: 100vh;
+    }
+    .wrap { max-width: 1040px; margin: 0 auto; padding: 32px 20px 64px; }
+
+    header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 28px; }
+    .brand { display: flex; align-items: center; gap: 12px; font-weight: 800; font-size: 22px; letter-spacing: -0.02em; }
+    .logo {
+      width: 40px; height: 40px; border-radius: 12px;
+      background: linear-gradient(135deg, var(--brand), var(--brand-2));
+      display: grid; place-items: center; color: white; font-weight: 800;
+      box-shadow: 0 8px 20px -6px rgba(79,70,229,.5);
+    }
+    .tag { font-size: 13px; color: var(--muted); background: white; border: 1px solid var(--line);
+           padding: 6px 12px; border-radius: 999px; }
+
+    .hero h1 { font-size: clamp(28px, 4vw, 42px); line-height: 1.1; margin: 0 0 12px; letter-spacing: -0.03em; }
+    .hero p { color: var(--muted); font-size: 17px; max-width: 620px; margin: 0 0 28px; line-height: 1.5; }
+
+    .steps { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 24px; }
+    .step { display: flex; align-items: center; gap: 8px; font-size: 14px; color: var(--muted);
+            background: white; border: 1px solid var(--line); padding: 8px 14px; border-radius: 999px; }
+    .step b { width: 22px; height: 22px; border-radius: 50%; background: var(--line); color: var(--ink);
+              display: grid; place-items: center; font-size: 12px; }
+
+    .grid { display: grid; gap: 20px; grid-template-columns: 1fr; }
+    @media (min-width: 860px) { .grid { grid-template-columns: 380px 1fr; } }
+
+    .card { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius);
+            padding: 22px; box-shadow: 0 1px 2px rgba(15,23,42,.04), 0 10px 30px -12px rgba(15,23,42,.12); }
+    .card h3 { margin: 0 0 6px; font-size: 16px; }
+    .card .sub { margin: 0 0 16px; color: var(--muted); font-size: 14px; line-height: 1.45; }
+
+    .drop {
+      border: 2px dashed #c7d2fe; border-radius: 16px; padding: 36px 18px; text-align: center;
+      background: #eef2ff; cursor: pointer; transition: .2s; position: relative;
+    }
+    .drop:hover, .drop.over { border-color: var(--brand); background: #e0e7ff; }
+    .drop .icon { font-size: 34px; margin-bottom: 6px; }
+    .drop strong { display: block; font-size: 16px; margin-bottom: 4px; }
+    .drop span { color: var(--muted); font-size: 13px; }
+    #file { position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%; }
+
+    .privacy { margin-top: 16px; font-size: 13px; color: var(--muted); line-height: 1.5;
+               background: #f8fafc; border-radius: 12px; padding: 12px 14px; border: 1px solid var(--line); }
+
+    #result { display: none; }
+    #result.show { display: block; }
+    .score-row { display: flex; align-items: center; gap: 20px; flex-wrap: wrap; }
+    .ring { width: 96px; height: 96px; border-radius: 50%; display: grid; place-items: center; flex-shrink: 0;
+            background: conic-gradient(var(--c) calc(var(--p) * 1%), #e2e8f0 0); }
+    .ring > div { width: 78px; height: 78px; border-radius: 50%; background: white; display: grid; place-items: center;
+                  font-weight: 800; font-size: 22px; }
+    .score-text h2 { margin: 0 0 4px; font-size: 20px; }
+    .score-text p { margin: 0; color: var(--muted); font-size: 14px; }
+    .reasons { list-style: none; padding: 0; margin: 18px 0 0; display: grid; gap: 8px; }
+    .reasons li { background: #f8fafc; border: 1px solid var(--line); border-radius: 12px; padding: 10px 14px; font-size: 14px; }
+    .reasons li.none { color: var(--muted); }
+
+    .compare { display: grid; gap: 14px; margin-top: 20px; grid-template-columns: 1fr; }
+    @media (min-width: 640px) { .compare { grid-template-columns: 1fr 1fr; } }
+    .photo-box { position: relative; border-radius: 14px; overflow: hidden; background: #0f172a; }
+    .photo-box .label { position: absolute; top: 10px; left: 10px; background: rgba(15,23,42,.85); color: white;
+                        font-size: 12px; padding: 4px 10px; border-radius: 999px; z-index: 2; }
+    .photo-box .label.after { background: var(--safe); }
+    .wrap-img { position: relative; display: block; line-height: 0; }
+    .wrap-img img { width: 100%; height: auto; display: block; }
+    .box { position: absolute; border: 2px solid #f43f5e; background: rgba(244,63,94,.18); border-radius: 4px; pointer-events: none; }
+
+    .actions { margin-top: 18px; display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
+    button.primary {
+      appearance: none; border: 0; cursor: pointer; border-radius: 12px; padding: 14px 20px;
+      font: inherit; font-weight: 700; color: white;
+      background: linear-gradient(135deg, var(--brand), var(--brand-2));
+      box-shadow: 0 10px 24px -10px rgba(79,70,229,.7); transition: transform .15s;
+    }
+    button.primary:hover { transform: translateY(-1px); }
+    button.primary:disabled { opacity: .5; cursor: not-allowed; transform: none; }
+    #nextsteps { margin: 0; font-size: 14px; color: var(--ink); flex: 1; min-width: 220px; line-height: 1.45; }
+
+    .empty { text-align: center; color: var(--muted); padding: 60px 20px; }
+    .empty .big { font-size: 40px; margin-bottom: 8px; }
+
+    .disclaimer { margin-top: 28px; font-size: 13px; color: var(--muted); text-align: center; }
+    .spin { display: inline-block; width: 14px; height: 14px; border: 2px solid #c7d2fe; border-top-color: var(--brand);
+            border-radius: 50%; animation: s .7s linear infinite; vertical-align: -2px; margin-right: 6px; }
+    @keyframes s { to { transform: rotate(360deg); } }
+  </style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="brand"><div class="logo">V</div>Veil</div>
+    <div class="tag">Privacy check before you post</div>
+  </header>
+
+  <section class="hero">
+    <h1>Before you post, check what your photo gives away.</h1>
+    <p>Veil finds hidden GPS data and readable clues like number plates and shop signs, then removes them and shows you what changed.</p>
+  </section>
+
+  <div class="steps">
+    <div class="step"><b>1</b> Upload a photo</div>
+    <div class="step"><b>2</b> Review what Veil found</div>
+    <div class="step"><b>3</b> Remove and re-check</div>
+  </div>
+
+  <div class="grid">
+    <div class="card">
+      <h3>Your photo</h3>
+      <p class="sub">Processed on the Veil server for this check only. Nothing is stored after the result.</p>
+      <div class="drop" id="drop">
+        <div class="icon">📷</div>
+        <strong>Choose a photo</strong>
+        <span>JPG, PNG, or HEIC up to 10 MB</span>
+        <input type="file" id="file" accept="image/*" aria-label="Choose a photo">
+      </div>
+      <div class="privacy">
+        <strong>What Veil checks:</strong> GPS metadata, readable text like plates and signs.
+        <br><strong>What it doesn't check yet:</strong> whether the scene itself gives away your location.
+      </div>
+    </div>
+
+    <div class="card" id="empty-state">
+      <div class="empty">
+        <div class="big">🛡️</div>
+        <strong>No photo yet</strong>
+        <p>Your results will appear here.</p>
+      </div>
+    </div>
+
+    <div class="card" id="result">
+      <div class="score-row">
+        <div class="ring" id="ring"><div id="ringText">0</div></div>
+        <div class="score-text">
+          <h2 id="score"></h2>
+          <p>A simple rule-based score of obvious clues. It is not a measure of how easy you are to find.</p>
+        </div>
+      </div>
+      <ul class="reasons" id="reasons"></ul>
+
+      <div class="compare">
+        <div class="photo-box">
+          <span class="label" id="photo-label">Before</span>
+          <div class="wrap-img" id="wrap">
+            <img id="preview" alt="Photo being checked">
+          </div>
+        </div>
+      </div>
+
+      <div class="actions">
+        <button id="fix" class="primary" type="button" disabled>Remove location and blur text</button>
+        <p id="nextsteps"></p>
+      </div>
+    </div>
+  </div>
+
+  <p class="disclaimer">Veil reports what it can detect. A clean result does not mean a photo is safe.</p>
+</div>
+
+<script>
+let currentFile = null;
+let lastScan = null;
+
+const $ = (id) => document.getElementById(id);
+const fileInput = $("file");
+const drop = $("drop");
+const result = $("result");
+const emptyState = $("empty-state");
+const preview = $("preview");
+const wrap = $("wrap");
+
+["dragenter", "dragover"].forEach((ev) =>
+  drop.addEventListener(ev, (e) => { e.preventDefault(); drop.classList.add("over"); }));
+["dragleave", "drop"].forEach((ev) =>
+  drop.addEventListener(ev, (e) => { e.preventDefault(); drop.classList.remove("over"); }));
+drop.addEventListener("drop", (e) => {
+  const f = e.dataTransfer.files[0];
+  if (f) { fileInput.files = e.dataTransfer.files; handleFile(f); }
+});
+
+fileInput.addEventListener("change", () => {
+  if (fileInput.files[0]) handleFile(fileInput.files[0]);
+});
+
+function handleFile(file) {
+  currentFile = file;
+  lastScan = null;
+  scan(file);
+}
+
+function ringColor(risk) {
+  if (risk >= 60) return "var(--danger)";
+  if (risk >= 20) return "var(--warn)";
+  return "var(--safe)";
+}
+
+function setRing(risk) {
+  const ring = $("ring");
+  ring.style.setProperty("--p", risk);
+  ring.style.setProperty("--c", ringColor(risk));
+  $("ringText").textContent = risk;
+}
+
+function setPhotoLabel(text) {
+  const label = $("photo-label");
+  label.textContent = text;
+  label.classList.toggle("after", text === "After");
+}
+
+function showResults() {
+  result.classList.add("show");
+  emptyState.style.display = "none";
+}
+
+async function scan(file) {
+  showResults();
+  setPhotoLabel("Before");
+  $("score").textContent = "Scanning…";
+  $("nextsteps").innerHTML = '<span class="spin"></span>Looking for clues in your photo';
+  $("reasons").innerHTML = "";
+  $("fix").disabled = true;
+  try {
+    const fd = new FormData();
+    fd.append("photo", file);
+    const res = await fetch("/api/scan", { method: "POST", body: fd });
+    if (!res.ok) throw new Error("scan failed (" + res.status + ")");
+    lastScan = await res.json();
+    showScan(lastScan, file);
+  } catch (e) {
+    $("score").textContent = "Something went wrong";
+    $("nextsteps").textContent = "Error: " + e.message;
+  }
+}
+
+function renderReasons(reasons) {
+  return reasons.length
+    ? reasons.map((r) => `<li>${r}</li>`).join("")
+    : '<li class="none">No obvious clues found</li>';
+}
+
+function showScan(data, file) {
+  setRing(data.risk);
+  $("score").textContent = data.risk >= 60 ? "High visible risk"
+    : data.risk >= 20 ? "Some clues found" : "No obvious clues";
+  let reasons = renderReasons(data.reasons);
+  if (!data.ocr_enabled) reasons += '<li class="none">Text detection is off. Install Tesseract to enable it.</li>';
+  $("reasons").innerHTML = reasons;
+  preview.src = URL.createObjectURL(file);
+  preview.onload = () => drawBoxes(data.text_boxes);
+  $("nextsteps").textContent = nextSteps(data);
+  $("fix").disabled = false;
+}
+
+function drawBoxes(boxes) {
+  wrap.querySelectorAll(".box").forEach((el) => el.remove());
+  const scaleX = preview.clientWidth / preview.naturalWidth;
+  const scaleY = preview.clientHeight / preview.naturalHeight;
+  boxes.forEach((b) => {
+    const d = document.createElement("div");
+    d.className = "box";
+    d.style.left = b.x * scaleX + "px";
+    d.style.top = b.y * scaleY + "px";
+    d.style.width = b.w * scaleX + "px";
+    d.style.height = b.h * scaleY + "px";
+    wrap.appendChild(d);
+  });
+}
+
+function nextSteps(data) {
+  if (data.has_gps) return "Post later, not while you're still there. Remove the location data before posting.";
+  if (data.text_boxes.length) return "Blur the highlighted areas before posting.";
+  return "No readable text or location data found. That does not mean the photo is safe. Check the background yourself.";
+}
+
+$("fix").addEventListener("click", async () => {
+  if (!currentFile || !lastScan) return;
+  $("fix").disabled = true;
+  $("nextsteps").innerHTML = '<span class="spin"></span>Removing location and blurring text';
+  try {
+    const fd = new FormData();
+    fd.append("photo", currentFile);
+    fd.append("boxes", JSON.stringify(lastScan.text_boxes));
+    const res = await fetch("/api/clean", { method: "POST", body: fd });
+    if (!res.ok) throw new Error("clean failed (" + res.status + ")");
+    const cleanFile = new File([await res.blob()], "veil_clean.jpg", { type: "image/jpeg" });
+
+    const fd2 = new FormData();
+    fd2.append("photo", cleanFile);
+    const rescanRes = await fetch("/api/scan", { method: "POST", body: fd2 });
+    if (!rescanRes.ok) throw new Error("rescan failed (" + rescanRes.status + ")");
+    const rescan = await rescanRes.json();
+
+    const before = lastScan.risk;
+    setRing(rescan.risk);
+    $("score").textContent = `Risk went from ${before} to ${rescan.risk}`;
+    $("reasons").innerHTML = "<li><b>After removal</b></li>" + renderReasons(rescan.reasons);
+
+    currentFile = cleanFile;
+    lastScan = rescan;
+    setPhotoLabel("After");
+    preview.src = URL.createObjectURL(cleanFile);
+    preview.onload = () => drawBoxes(rescan.text_boxes);
+    $("nextsteps").textContent = "Remaining risk is not measured here. The scene itself can still identify a location. Check the background before posting.";
+  } catch (e) {
+    $("nextsteps").textContent = "Error: " + e.message;
+  } finally {
+    $("fix").disabled = false;
+  }
+});
+</script>
+</body>
+</html>
