@@ -16,9 +16,9 @@ except ImportError:
 
 GPS_IFD = 0x8825                     # EXIF tag that holds GPS data
 MAX_UPLOAD = 10 * 1024 * 1024
-OCR_MAX_SIDE = 1600                  # analyse at this size; plenty for text detection
+OCR_MAX_SIDE = 1000                  # smaller working image: less memory and time on free hosting
 OCR_SCALES = (2,)                    # one upscale is enough once the image is resized
-OCR_PSMS = ("--psm 11", "--psm 6")   # sparse text, and uniform text blocks
+OCR_PSMS = ("--psm 11",)             # one pass keeps scans fast enough for the free tier
 OCR_MIN_CONF = 40                    # minimum confidence for a box to be blurred
 OCR_WORD_CONF = 75                   # minimum confidence for a word to count toward the score
 ALNUM = re.compile(r"[A-Za-z0-9]")
