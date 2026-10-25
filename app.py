@@ -1,11 +1,15 @@
-import io, json, re
+import io, json, os, re
 from flask import Flask, request, jsonify, send_file, render_template
 from PIL import Image, ImageFilter, ImageOps
 
 try:
     import pytesseract
     from pytesseract import Output
-    pytesseract.pytesseract.tesseract_cmd = r"C:\Program Files\Tesseract-OCR\tesseract.exe"
+    # Local Windows: set TESSERACT_CMD to the full path of tesseract.exe.
+    # On Render (Docker), the Dockerfile sets this to /usr/bin/tesseract.
+    tess_cmd = os.environ.get("TESSERACT_CMD")
+    if tess_cmd:
+        pytesseract.pytesseract.tesseract_cmd = tess_cmd
     OCR_AVAILABLE = True
 except ImportError:
     OCR_AVAILABLE = False
@@ -180,4 +184,4 @@ def api_clean():
 
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 5000)), debug=False)
